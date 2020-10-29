@@ -25,6 +25,8 @@
 
 char *argv0;
 
+int use_inverted_colors = 0;
+
 /* macros */
 #define LEN(a)         (sizeof(a) / sizeof(a)[0])
 #define LIMIT(x, a, b) (x) = (x) < (a) ? (a) : (x) > (b) ? (b) : (x)
@@ -537,6 +539,12 @@ xdraw()
 			         0,
 			         slides[idx].lines[i],
 			         0);
+		if (idx != 0 && progressheight != 0) {
+			drw_rect(d,
+			         0, xw.h - progressheight,
+			         (xw.w * idx)/(slidecount - 1), progressheight,
+			         1, 0);
+		}
 		drw_map(d, xw.win, 0, 0, xw.w, xw.h);
 	} else {
 		if (!(im->state & SCALED))
@@ -590,7 +598,11 @@ xinit()
 
 	if (!(d = drw_create(xw.dpy, xw.scr, xw.win, xw.w, xw.h)))
 		die("sent: Unable to create drawing context");
-	sc = drw_scm_create(d, colors, 2);
+	if (use_inverted_colors) {
+		sc = drw_scm_create(d, inverted_colors, 2);
+	} else {
+		sc = drw_scm_create(d, colors, 2);
+	}
 	drw_setscheme(d, sc);
 	XSetWindowBackground(xw.dpy, xw.win, sc[ColBg].pixel);
 
@@ -679,7 +691,7 @@ configure(XEvent *e)
 void
 usage()
 {
-	die("usage: %s [file]", argv0);
+	die("usage: %s [-c fgcolor] [-b bgcolor] [-f font] [file]", argv0);
 }
 
 int
@@ -691,6 +703,18 @@ main(int argc, char *argv[])
 	case 'v':
 		fprintf(stderr, "sent-"VERSION"\n");
 		return 0;
+	case 'f':
+		fontfallbacks[0] = EARGF(usage());
+		break;
+	case 'c':
+		colors[0] = EARGF(usage());
+		break;
+	case 'b':
+		colors[1] = EARGF(usage());
+		break;
+	case 'i':
+		use_inverted_colors = 1;
+		break;
 	default:
 		usage();
 	} ARGEND

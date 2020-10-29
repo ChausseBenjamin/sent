@@ -27,4 +27,8 @@
 *.swp
 *~
 
+# Patch files
+*.orig
+*.rej
+
 config.h
